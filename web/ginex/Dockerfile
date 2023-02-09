@@ -1,5 +1,5 @@
 FROM alpine:3.16
 WORKDIR /home/ginweb
-COPY out/ginweb_linux  ./ginweb_linux
+ADD out/ginweb_linux app
 EXPOSE 8080
-ENTRYPOINT ["./ginweb_linux"]
+ENTRYPOINT ["./app"]

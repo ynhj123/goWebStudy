@@ -18,6 +18,7 @@ func setupRouter() *gin.Engine {
 	return r
 }
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	router := setupRouter()
 	srv := &http.Server{
 		Addr:    ":8080",
