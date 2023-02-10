@@ -2,44 +2,38 @@ package main
 
 import (
 	"context"
-	"flag"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	pb "grpcExample/proto"
+	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
 	"time"
 )
 
-const (
-	defaultName = "world"
-)
-
-var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-	name = flag.String("name", defaultName, "Name to greet")
-)
-
 func main() {
-	flag.Parse()
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+	gin.SetMode(gin.DebugMode)
+	router := setupRouter()
+	srv := &http.Server{
+		Addr:    ":8081",
+		Handler: router,
 	}
-	defer func(conn *grpc.ClientConn) {
-		err := conn.Close()
-		if err != nil {
-
+	go func() {
+		// 服务连接
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
 		}
-	}(conn)
-	c := pb.NewGreeterClient(conn)
+	}()
 
-	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
+	log.Println("Server exiting")
 }
