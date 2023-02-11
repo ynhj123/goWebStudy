@@ -1,6 +1,6 @@
 module proto
 
-go 1.20
+go 1.19
 
 require (
 	google.golang.org/grpc v1.53.0

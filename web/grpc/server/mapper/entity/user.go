@@ -7,6 +7,7 @@ type User struct {
 	Accesskey    string
 	Username     string
 	Password     string
+	Nickname     string
 	Icon         string
 	Phone        string
 	Email        string
@@ -24,8 +25,8 @@ type User struct {
 	Coin         string
 	Type         string
 	IsActive     string
-	CreatedTime  time.Time
-	UpdateTime   time.Time
+	CreatedTime  []uint8
+	UpdateTime   []uint8
 	Occupation   string
 }
 

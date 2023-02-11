@@ -6,6 +6,6 @@ import (
 )
 
 var (
-	dsn   = "root:root123@tcp(127.0.0.1:3306)/u_chat?useUnicode=true&characterEncoding=utf8mb4&allowMultiQueries=true&rewriteBatchedStatements=true&parseTime=True"
+	dsn   = "root:root123@tcp(127.0.0.1:3306)/u_chat"
 	db, _ = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 )

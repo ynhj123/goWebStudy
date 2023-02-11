@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "grpcExample/proto"
 	"log"
+	"server/mapper"
 )
 
 type server struct {
@@ -13,5 +14,6 @@ type server struct {
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(_ context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+	user := mapper.GetByUserName(in.GetName())
+	return &pb.HelloReply{Message: "Hello " + user.Nickname}, nil
 }
