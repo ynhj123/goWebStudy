@@ -2,11 +2,13 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"log"
 )
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(otelgin.Middleware("grpc-client"))
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
