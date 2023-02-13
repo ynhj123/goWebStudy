@@ -1,7 +1,5 @@
 package entity
 
-import "time"
-
 type User struct {
 	Id           int64 `gorm:"primarykey"`
 	Accesskey    string
@@ -12,7 +10,7 @@ type User struct {
 	Phone        string
 	Email        string
 	Gender       string
-	Birthday     time.Time
+	Birthday     []uint8
 	Nation       string
 	Introduction string
 	CountryCode  string
