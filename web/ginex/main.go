@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -12,8 +13,31 @@ import (
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"title": "Main website",
+		})
+	})
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
+	})
+	r.GET("/stream", func(c *gin.Context) {
+		chanStream := make(chan int, 10)
+		go func() {
+			defer close(chanStream)
+			for i := 0; i < 5; i++ {
+				chanStream <- i
+				time.Sleep(time.Second * 1)
+			}
+		}()
+		c.Stream(func(w io.Writer) bool {
+			if msg, ok := <-chanStream; ok {
+				c.SSEvent("message", msg)
+				return true
+			}
+			return false
+		})
 	})
 	return r
 }
