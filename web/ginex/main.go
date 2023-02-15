@@ -42,11 +42,19 @@ func setupRouter() *gin.Engine {
 			log.Fatal(err.Error())
 		}
 		log.Println("request" + request.Msg)
-		var chats Chat
+		var chats []Chat
 		errs := json.Unmarshal([]byte(request.Chats), &chats)
 		if errs != nil {
 			fmt.Println("json unmarshal error:", errs)
 		}
+		var question = ""
+		if len(chats) != 0 {
+			for i := 0; i < len(chats); i++ {
+				chat := chats[i]
+				question += chat.Q + "\n" + chat.A
+			}
+		}
+		question += request.Msg
 		//chanStream := make(chan int, 10)
 		//go func() {
 		//	defer close(chanStream)
@@ -71,7 +79,7 @@ func setupRouter() *gin.Engine {
 		req := gogpt.CompletionRequest{
 			Model:     gogpt.GPT3TextDavinci003,
 			MaxTokens: 5,
-			Prompt:    request.Msg,
+			Prompt:    question,
 			Stream:    true,
 		}
 		stream, err := client.CreateCompletionStream(ctx, req)

@@ -40,8 +40,9 @@
         });
         stream.addEventListener("stop", function (e) {
             stream.close()
+            chat.a += "\n"
             chats.push(chat)
-            document.getElementById("result").innerHTML += "\n"
+            document.getElementById("result").innerHTML = chat.a
             console.log(e)
         });
         stream.onerror = function (event) {
