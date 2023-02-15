@@ -5,12 +5,44 @@
     <title>Title</title>
 </head>
 <body>
+<p id="result">
 
+</p>
+
+<div>
+    <input type="text" id="msg">
+    <button type="button" onclick="submit()">提交!</button>
+</div>
 </body>
 <script>
-    var stream = new EventSource("/stream");
-    stream.addEventListener("message", function(e){
-        console.log(e.data);
-    });
+    class Chat {
+        constructor(q, a) {
+            this.q = q;
+            this.a = a;
+        }
+    }
+
+    const chats = [];
+
+    function submit() {
+        const chat = new Chat();
+        chat.q = document.getElementById("msg").value;
+        let value = "";
+        const stream = new EventSource("/stream?msg=" + chat.q + "&chats=" + JSON.stringify(chats))
+        stream.addEventListener("message", function (e) {
+            document.getElementById("result").innerHTML += e.data
+            value += e.data
+        });
+        stream.addEventListener("stop", function (e) {
+            stream.close()
+            chat.a = value;
+            chats.push(chat)
+            document.getElementById("result").innerHTML += "\n"
+        });
+        stream.onerror = function (event) {
+            stream.close()
+        }
+    }
+
 </script>
 </html>
