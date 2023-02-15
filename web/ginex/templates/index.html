@@ -5,9 +5,9 @@
     <title>Title</title>
 </head>
 <body>
-<p id="result">
+<div id="result">
 
-</p>
+</div>
 
 <div>
     <input type="text" id="msg">
@@ -25,22 +25,28 @@
     const chats = [];
 
     function submit() {
+        let question = document.getElementById("msg").value
+        if (question === undefined || question === "") {
+            alert("please input question")
+        }
         const chat = new Chat();
-        chat.q = document.getElementById("msg").value;
-        let value = "";
+        chat.q = question;
+        chat.a = "";
         const stream = new EventSource("/stream?msg=" + chat.q + "&chats=" + JSON.stringify(chats))
         stream.addEventListener("message", function (e) {
-            document.getElementById("result").innerHTML += e.data
-            value += e.data
+            let parse = JSON.parse(e.data);
+            chat.a += parse["text"]
+            document.getElementById("result").innerHTML = chat.a
         });
         stream.addEventListener("stop", function (e) {
             stream.close()
-            chat.a = value;
             chats.push(chat)
             document.getElementById("result").innerHTML += "\n"
+            console.log(e)
         });
         stream.onerror = function (event) {
             stream.close()
+            console.log(event)
         }
     }
 

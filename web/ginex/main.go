@@ -69,7 +69,7 @@ func setupRouter() *gin.Engine {
 		ctx := context.Background()
 
 		req := gogpt.CompletionRequest{
-			Model:     gogpt.GPT3Ada,
+			Model:     gogpt.GPT3TextDavinci003,
 			MaxTokens: 5,
 			Prompt:    request.Msg,
 			Stream:    true,
@@ -78,35 +78,51 @@ func setupRouter() *gin.Engine {
 		if err != nil {
 			return
 		}
+
+		chanStream := make(chan string, 100)
 		go func() {
 			defer stream.Close()
-		}()
-		c.Stream(func(w io.Writer) bool {
+			defer close(chanStream)
 			for {
 				response, err := stream.Recv()
 				if errors.Is(err, io.EOF) {
 					fmt.Println("Stream finished")
-					c.SSEvent("stop", "")
-					return false
-				}
-				if errors.Is(err, gogpt.ErrTooManyEmptyStreamMessages) {
-					// ... handle stream end
-					fmt.Println("Stream ErrTooManyEmptyStreamMessages")
-					c.SSEvent("stop", "")
-					return false
+					chanStream <- "<!finish>"
+					return
 				}
 
 				if err != nil {
 					fmt.Printf("Stream error: %v\n", err)
-					c.SSEvent("stop", "err")
-					return false
+					chanStream <- "<!error>"
+					return
 				}
+				if len(response.Choices) == 0 {
+					fmt.Println("Stream finished")
+					chanStream <- "<!finish>"
+					return
+				}
+				data, err := json.Marshal(response.Choices[0])
+				chanStream <- string(data)
+				fmt.Printf("Stream response: %v\n", response.Choices[0])
+			}
+		}()
 
-				fmt.Printf("Stream response: %v\n", response)
-				c.SSEvent("message", response)
+		c.Stream(func(w io.Writer) bool {
+			if msg, ok := <-chanStream; ok {
+				if msg == "<!finish>" {
+					c.SSEvent("stop", "finish")
+				}
+				if msg == "<!error>" {
+					c.SSEvent("stop", "error")
+				}
+				c.SSEvent("message", msg)
+				fmt.Printf("message: %v\n", msg)
+
 				return true
 			}
+			return false
 		})
+
 	})
 	return r
 }
