@@ -82,28 +82,30 @@ func setupRouter() *gin.Engine {
 			defer stream.Close()
 		}()
 		c.Stream(func(w io.Writer) bool {
-			response, err := stream.Recv()
-			if errors.Is(err, io.EOF) {
-				fmt.Println("Stream finished")
-				c.SSEvent("stop", "")
-				return false
-			}
-			if errors.Is(err, gogpt.ErrTooManyEmptyStreamMessages) {
-				// ... handle stream end
-				fmt.Println("Stream ErrTooManyEmptyStreamMessages")
-				c.SSEvent("stop", "")
-				return false
-			}
+			for {
+				response, err := stream.Recv()
+				if errors.Is(err, io.EOF) {
+					fmt.Println("Stream finished")
+					c.SSEvent("stop", "")
+					return false
+				}
+				if errors.Is(err, gogpt.ErrTooManyEmptyStreamMessages) {
+					// ... handle stream end
+					fmt.Println("Stream ErrTooManyEmptyStreamMessages")
+					c.SSEvent("stop", "")
+					return false
+				}
 
-			if err != nil {
-				fmt.Printf("Stream error: %v\n", err)
-				c.SSEvent("stop", "err")
-				return false
-			}
+				if err != nil {
+					fmt.Printf("Stream error: %v\n", err)
+					c.SSEvent("stop", "err")
+					return false
+				}
 
-			fmt.Printf("Stream response: %v\n", response)
-			c.SSEvent("message", response)
-			return true
+				fmt.Printf("Stream response: %v\n", response)
+				c.SSEvent("message", response)
+				return true
+			}
 		})
 	})
 	return r
