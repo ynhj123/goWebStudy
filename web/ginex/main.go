@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"ginexample/exception"
 	"github.com/gin-gonic/gin"
 	gogpt "github.com/sashabaranov/go-gpt3"
 	"io"
@@ -26,6 +27,7 @@ type Chat struct {
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(exception.Recover)
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
@@ -39,7 +41,7 @@ func setupRouter() *gin.Engine {
 		var request SteamRequest
 		err := c.ShouldBindQuery(&request)
 		if err != nil {
-			log.Fatal(err.Error())
+			panic(err)
 		}
 		log.Println("request" + request.Msg)
 		var chats []Chat
